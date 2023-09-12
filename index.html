@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="testes/css.css" />
+    <link rel="icon" href="imagens/termometro.jpg" />
+    <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@300&family=Itim&display=swap" rel="stylesheet">
+    
+    <title>Projeto Eng.Computação</title>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1 id="titulo">Dados de Temperatura e Umidade</h1>
+        </div>
+    </header>
+
+    <nav>
+        <h4 id="last_time">Última Atualização: <span id="lastUpdate"></span></h4>
+    </nav>
+    
+
+
+        <div class="grafico">
+            <h4 id="titulo_temp">Temperatura: <span id="temperature"></span>°C</h4> <br>
+            <iframe width="450" height="260" style="border: 2px solid #000000;" src="https://thingspeak.com/channels/2257131/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Temperatura&type=line&xaxis=Tempo&yaxis=Celsius"></iframe>
+        </div>
+        <div class="grafico">
+                <h4 id="titulo_umi">Umidade: <span id="humidity"></span>%</h4> <br>
+                <iframe  width="450" height="260" style="border: 2px solid #000000;" src="https://thingspeak.com/channels/2257131/charts/2?bgcolor=%23ffffff&color=%230000ff&dynamic=true&results=60&title=Umidade&type=line&xaxis=Tempo&yaxis=Umidade"></iframe>
+
+        </div>
+   
+        
+
+    
+
+        <script>
+            // Função para atualizar os valores de temperatura, umidade e última atualização na página
+            function updateData(temperature, humidity, lastUpdate) {
+                document.getElementById("temperature").textContent = temperature;
+                document.getElementById("humidity").textContent = humidity;
+    
+                // Converte a hora UTC para o horário de Brasília (BRT)
+                const lastUpdateDate = new Date(lastUpdate);
+                lastUpdateDate.setMinutes(lastUpdateDate.getMinutes() - lastUpdateDate.getTimezoneOffset() +180); // 180 minutos para compensar o fuso horário
+                const lastUpdateString = lastUpdateDate.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    
+                document.getElementById("lastUpdate").textContent = lastUpdateString;
+            }
+    
+            // Função para realizar uma requisição GET e atualizar os dados na página
+            function fetchData() {
+                fetch("https://api.thingspeak.com/channels/2257131/feeds.json?results=1")
+                    .then(response => response.json())
+                    .then(data => {
+                        const entry = data.feeds[0];
+                        const temperature = entry.field1;
+                        const humidity = entry.field2;
+                        const lastUpdate = entry.created_at; // Data e hora em UTC
+                        updateData(temperature, humidity, lastUpdate);
+                    })
+                    .catch(error => {
+                        console.error("Erro ao buscar os dados:", error);
+                    });
+            }
+    
+            // Atualiza os dados ao carregar a página e a cada 10 segundos
+            fetchData();
+            setInterval(fetchData, 10000);
+        </script>
+</body>
+</html>
